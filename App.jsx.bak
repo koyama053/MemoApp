@@ -1,0 +1,11 @@
+import { WebView } from 'react-native-webview';
+
+export default function App() {
+  return (
+    <WebView
+      source={{ uri: 'http://localhost:3000/app/info/ask?pathway=d_app' }}
+      // source={{ uri: 'http://localhost:3000/buildings/b9a624ba-ff77-5e52-a2fa-5cfad93455f8/properties/cd9f75db-324f-5518-9cc0-5f120adfb662?pathway=d_app&device_id=koyama-test' }}
+      style={{ marginTop: 20 }}
+    />
+  );
+}

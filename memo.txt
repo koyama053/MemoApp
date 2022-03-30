@@ -1,0 +1,177 @@
+# react-navigationのインストール
+
+npm show @react-navigation/native
+npm install @react-navigation/native@5.8.10
+
+依存関係のインストール
+expo install react-native-gesture-handler react-native-reanimated react-native-screens react-native-safe-area-context @react-native-community/masked-view
+
+エラーが発生する場合はローカルのnodeのバージョンを確認
+
+stack navigatorのインストール
+npm show @react-navigation/stack
+npm install @react-navigation/stack@5.12.8
+
+公式ドキュメント
+https://reactnavigation.org/docs/5.x/hello-react-navigation
+https://reactnavigation.org/docs/5.x/hello-react-navigation#creating-a-stack-navigator
+
+# ナビゲーションを導入して画面を繋ぐ
+
+ナビゲーションを書く際は公式ドキュメントを参照しながら実装するので、
+書き方を覚える必要性はない。
+
+
+initialRouteName
+→最初に表示されるスクリーンを指定
+
+Navigationのレイアウト
+
+
+# ボタンをタップして画面を遷移させる
+
+default propsの警告は無視
+
+# IOSとAndroidのアニメーションを統一する。
+IOS スライド
+Android ファードアウト
+
+デフォアニメーションが異なる
+
+
+なんでfirebaseの設定情報公開情報OK
+https://qiita.com/hoshymo/items/e9c14ed157200b36eaa5
+
+
+
+
+# 以下はDoor賃貸のwebview用のapp.jsx
+import { WebView } from 'react-native-webview';
+
+export default function App() {
+  return (
+    <WebView
+      source={{ uri: 'http://localhost:3000/app/buildings/5ca7786e-de58-56d7-88f9-ad7895e0ae4d/properties/2ec2e566-9550-51d7-bb4e-f46a117fa3d3?pathway=d_app&device_id=koyama-test' }}
+      style={{ marginTop: 30 }}
+    />
+  );
+}
+
+user1@test.com
+
+
+    # アプリ用問い合わせ未完了テーブルに保存
+    @myobject_masters.map { |myobject_master| session_user.add_incomplete_property_by_mmid(myobject_master.id) } if mobile_app?
+
+
+
+
+ session_user = SessionUser.find(900771764)
+ incomplete_inquiry = session_user.incomplete_inquiries.find_by(incomplete_inquiry: {myobject_master_id: 7530007})
+ incomplete_inquiry&.destroy!
+
+ koyama@careerindex.co.jp
+
+self.incomplete_inquiries.delete_all(myobject_master_id: 7530007})
+
+self.incomplete_inquiries.delete_all(incomplete_inquiry: {myobject_master_id: 7530007})
+
+
+self.incomplete_inquiries.where(incomplete_inquiry: {myobject_master_id: 7530007}).delete_all
+
+
+2.16.1
+
+
+99
+
+memoの詳細画面遷移時にidを渡し、詳細画面にてfirebaseからデータを取得する。
+遷移時にメモ内容を渡す方法もあるが、画面同士の依存が高くなるためidのみを渡す。
+
+MemoList.jsx
+onPressにidを付与
+onPress={() => { navigation.navigate('MemoDetail', { id: item.id }); }}
+
+MemoDetailScreen.jsx
+routeというpropsにてidを受け取る。
+
+routeのpropTypes定義
+```
+MemoDetailScreen.propTypes = {
+  route: shape({
+    params: shape({ id: string }),
+  }).isRequired,
+};
+```
+
+idの取得
+```
+const { id } = route.params;
+```
+
+100
+idを使用してfirebaseからデータを取得し表示する。
+useEffectを使用し画面がレンダリングした後にデータを取得する。
+onSnapshotでメモの状態を監視する。
+useStateで一時的にメモの情報を保存しレンダリングに使用する。
+
+
+日付のフォーマットに下記ライブラリを使用
+npm install date-fns@2.16.1
+
+日付の変換のfunctionを定義
+src/utils/index.js
+```
+import { format } from 'date-fns';
+
+export function dateToString(date) {
+  if (!date) { return ''; }
+  return format(date, 'yyyy年M月d日 HH時mm分');
+}
+```
+
+MemoDetailScreen.jsx
+```
+export default function MemoDetailScreen(props) {
+  const { navigation, route } = props;
+  const { id } = route.params;
+  const [memo, setMemo] = useState(null);
+
+  useEffect(() => {
+    const { currentUser } = firebase.auth();
+    let unsubscribe = () => {};
+    if (currentUser) {
+      const db = firebase.firestore();
+      const ref = db.collection(`users/${currentUser.uid}/memos`).doc(id);
+      unsubscribe = ref.onSnapshot((doc) => {
+        const data = doc.data();
+        setMemo({
+          id: doc.id,
+          bodyText: data.bodyText,
+          updatedAt: data.updatedAt.toDate(),
+        });
+      });
+    }
+    return unsubscribe;
+  }, []);
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.memoHeader}>
+        <Text style={styles.memoTitle} numberOfLines={1}>{memo && memo.bodyText}</Text>
+        <Text style={styles.memoDate}>{memo && dateToString(memo.updatedAt)}</Text>
+      </View>
+      <ScrollView style={styles.memoBody}>
+        <Text style={styles.memoText}>
+          {memo && memo.bodyText}
+        </Text>
+      </ScrollView>
+      <CircleButton
+        style={{ top: 60, buttom: 'auto' }}
+        name="pencil"
+        onPress={() => { navigation.navigate('MemoEdit'); }}
+      />
+    </View>
+  );
+}
+```
